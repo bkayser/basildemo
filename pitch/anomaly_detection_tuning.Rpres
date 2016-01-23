@@ -1,0 +1,66 @@
+Interactive Parameter Tuning 
+========================================================
+author: Admiral Anomalous
+date: Jan 20, 2016
+
+Is My Application Healthy?
+========================================================
+```{r init, echo=F, message=F, warning=F}
+library(ggplot2)
+library(lubridate)
+source('../basil/eval.R')
+load('../data/testdata.RData')
+
+```
+You're using the Basil Application Performance Management Tool to watch your web
+application and page you when pages slow down or throughput spikes.  Basil uses historical data to build a baseline for expected performance and pages you when it detects an anomaly based on the following parameters:
+
+* The number of standard deviations $\sigma$ from the baseline that represent a violation.
+* The number of minutes of consecutive violations (lead time) required to flag an anomaly and send you a page.
+
+You have to tune these parameters so you get notified when things are bad but don't get woken up for a non-emergency.  
+
+Big Sigma, Small Lead Time
+========================================================
+
+```{r, echo=F}
+r <- threshold_eval(signal,
+                    lead_time=1,
+                    num_sigmas = 6)  
+
+ggplot(r) + aes(x=start, y=value) + 
+    geom_line() +
+    facet_grid(name ~ .,scales = 'free_y') +
+    geom_step(aes(y=baseline), color='#669900') +
+    geom_rect(aes(xmin=start, xmax=start+minutes(1), alpha=trigger, 
+                  ymax=value, ymin=baseline, fill=trigger), alpha=0.2) +
+    scale_fill_manual(values=c('#FFEEFF', '#FF3333', '#CCCC00')) +
+    scale_alpha_manual(values=c(0, .4, .4)) +
+    geom_ribbon(aes(ymax=baseline+threshold, ymin=baseline-threshold), color='#CCCCCC', alpha=0.2) +
+    theme_bw()
+```
+
+Small Sigma, Big Lead Time
+========================================================
+
+```{r, echo=F}
+r <- threshold_eval(signal,
+                    lead_time=6,
+                    num_sigmas = 3)  
+
+ggplot(r) + aes(x=start, y=value) + 
+    geom_line() +
+    facet_grid(name ~ .,scales = 'free_y') +
+    geom_step(aes(y=baseline), color='#669900') +
+    geom_rect(aes(xmin=start, xmax=start+minutes(1), alpha=trigger, 
+                  ymax=value, ymin=baseline, fill=trigger), alpha=0.2) +
+    scale_fill_manual(values=c('#FFEEFF', '#FF3333', '#CCCC00')) +
+    scale_alpha_manual(values=c(0, .4, .4)) +
+    geom_ribbon(aes(ymax=baseline+threshold, ymin=baseline-threshold), color='#CCCCCC', alpha=0.2) +
+    theme_bw()
+```
+
+Interactive Tuning
+========================================================
+
+
