@@ -1,10 +1,10 @@
 library(shiny)
 library(ggplot2)
 library(lubridate)
-testfile <- '../data/testdata.RData'
-
+source('eval.R')
 # Load signal and baseline datasets
-load(file=testfile)
+signal <- readRDS('../data/signal.rds')
+baseline <- readRDS('../data/baseline.rds')
 
 # Define server logic required to draw the metric plots
 shinyServer(function(input, output) {

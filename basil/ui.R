@@ -4,7 +4,7 @@ library(shiny)
 shinyUI(fluidPage(
     
     # Application title
-    titlePanel("Threshold Settings"),
+    titlePanel("Basil Parameter Tuning"),
     
     # Sidebar with a slider input for the number of bins
     sidebarLayout(
