@@ -1,5 +1,5 @@
 ---
-title       : "Detecting Anomalies"
+title       : "Detecting Anomalies with Basil"
 subtitle    : "Tuning Parameters Interactively"
 date        : "January 23, 2016"
 author      : "Captain Jack Aubrey"
@@ -7,20 +7,21 @@ job         : "Post Captain"
 framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
 highlighter : highlight.js  # {highlight.js, prettify, highlight}
 hitheme     : tomorrow      # 
-mode        : selfcontained # {selfcontained, standalone, draft}
+mode        : standalone # {selfcontained, standalone, draft}
 knit        : slidify::knit2slides
 widgets     : [mathjax]
 
 ---
-```{r init, results='hide', echo=F, message=F, warning=F, error=T}
+```{r init, echo=F, message=F, warning=F, error=T}
 library(ggplot2)
 library(lubridate)
 library(knitr)
-opts_chunk$set(message = F, cache=T, error = F, warning = F, cache=F, comment = NA, echo=F, dpi = 100)
 
-
+opts_chunk$set(cache=F, echo=F)
+source('eval.R')
+signal <- readRDS('signal.rds')
+baseline <- readRDS('baseline.rds')
 ```
-
 ## Is My Application Healthy?
 You're using the Basil Application Performance Management Tool to watch your web
 application and page you when pages slow down or throughput spikes.  Basil uses historical data to build a baseline for expected performance and pages you when it detects an anomaly based on the following parameters:
@@ -31,12 +32,23 @@ application and page you when pages slow down or throughput spikes.  Basil uses 
 How do you tune these parameters so you get notified when things are bad but don't get woken up for a non-emergency?
 
 ----
-## Small $\sigma$, Big Lead Time
+## Tuning Basil
+
+Knowing how to set the parameters will be tricky so I've built an application
+that let's you see what alerts would be generated on a sample dataset for 
+any given parameters.  
+
+The tool will show you a plot of real time page response time averages over a
+six hour period along with the baseline used to determine when response times
+are excessively slow.  
+
+Based on the settings you will see areas highlighted in red where an alert 
+would be triggered given the parameters you set.
+
+----
+## Small $\sigma$ Multiple, Big Lead Time
 
 ```{r}
-source('../basil/eval.R')
-signal <- readRDS('../data/signal.rds')
-baseline <- readRDS('../data/baseline.rds')
 lt <- 6
 ns <- 3
 r <- threshold_eval(signal,
@@ -45,11 +57,7 @@ r <- threshold_eval(signal,
 ```
 With a lead time of `r lt` minutes using `r ns` $\sigma$, you can see in the sample data the gray area at $baseline+/-3\sigma$ where alerts will get triggered.  With these parameters you get poor selectivity--there are too many alerts.
 
-```{r}
-r <- threshold_eval(signal,
-                    lead_time=6,
-                    num_sigmas = 3)  
-
+```{r, fig.height=5, fig.width=12}
 ggplot(r) + aes(x=start, y=value) + 
     geom_line() +
     facet_grid(name ~ .,scales = 'free_y') +
@@ -63,7 +71,7 @@ ggplot(r) + aes(x=start, y=value) +
 ```
 
 ---
-## Big Sigma, Small Lead Time
+## Big $\sigma$ Multiple, Small Lead Time
 
 ```{r}
 lt <- 1
@@ -74,7 +82,7 @@ r <- threshold_eval(signal,
 ```
 With a lead time of `r lt` minutes using `r ns` $\sigma$, you get fewer alerts but they also clear too quickly--they are too narrow.
 
-```{r}
+```{r, fig.height=5, fig.width=12}
 ggplot(r) + aes(x=start, y=value) + 
     geom_line() +
     facet_grid(name ~ .,scales = 'free_y') +
@@ -94,3 +102,6 @@ The ideal parameters depend on the underlying data and your prefererred tradeoff
 sensitivity and selectivity.  Using the Basil Parameter Tuning application you can adjust 
 parameters and examine the alerts that would be triggered until you are satisfied the algorithm
 meets your needs.
+
+<img src='assets/screenshot.png' width='50%'/>
+
